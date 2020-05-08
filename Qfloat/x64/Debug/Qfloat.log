@@ -1,0 +1,8 @@
+﻿  main.cpp
+  qfloat.cpp
+D:\sources\IrisStream\Qfloat\Qfloat\qfloat.cpp(40,40): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+D:\sources\IrisStream\Qfloat\Qfloat\qfloat.cpp(50,32): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+D:\sources\IrisStream\Qfloat\Qfloat\qfloat.cpp(200,33): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+D:\sources\IrisStream\Qfloat\Qfloat\qfloat.cpp(206,26): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+  Generating Code...
+  Qfloat.vcxproj -> D:\sources\IrisStream\Qfloat\x64\Debug\Qfloat.exe
