@@ -1,12 +1,63 @@
 ﻿#include "qfloat.h"
 
+bool Qfloat::getSign()
+{
+	return (data[0] & 1);
+}
+
+bool Qfloat::getExponent(int i)
+{
+	return((data[0] >> (i + 1)) & 1);
+}
+
+bool Qfloat::getSignificand(int i)
+{
+	if (i < 16)
+		return ((data[0] >> (i + 16)) & 1);
+	else
+	{
+		i += 16;
+		int interval = i / 32;
+		i = i % 32;
+		return ((data[interval] >> i) & 1);
+	}
+}
+
+void Qfloat::setSign(bool value)
+{
+	if (getSign() == value)
+		return;
+	data[0] ^= 1;
+}
+
+void Qfloat::setExponent(int i, bool value)
+{
+	if (getExponent(i) == value)
+		return;
+	data[0] = data[0] ^ (1 << (i + 1));
+}
+
+void Qfloat::setSignificand(int i, bool value)
+{
+	if (getSignificand(i) == value)
+		return;
+	if (i < 16)
+	{
+		data[0] = data[0] ^ (1 << (i + 16));
+	}
+	else
+	{
+		i += 16;
+		int interval = i / 32;
+		i = i % 32;
+		data[interval] = data[interval] ^ (1 << i);
+	}
+}
+
 Qfloat::Qfloat()
 {
-	sign = false;
-	for (int i = 0; i < exponentSize; i++)
-		this->exponent[i] = false;
-	for (int i = 0; i < significandSize; i++)
-		this->significand[i] = false;
+	//Khởi tạo tất cả các bit về 0
+	memset(data, 0, sizeof(data));
 }
 
 
@@ -22,7 +73,7 @@ Qfloat::Qfloat(string num) : Qfloat()
 	if (num[num.size() - 1] == '-')
 	{
 		num.resize(num.size() - 1);
-		this->sign = true;
+		
 	}
 	
 	//Tách phần nguyên và phần thập phân
@@ -51,68 +102,69 @@ Qfloat::Qfloat(string num) : Qfloat()
 	while (staticPoint[e] == '0')
 		e--;
 	for (int i = e - 1; i >= 0; i--)
-		this->significand[e - i - 1] = (staticPoint[i] == '1');
+		this->setSignificand(e - i - 1, staticPoint[i] == '1');
 
 	//Tính exponent
 	e = biasingValue + (e - pointPosition);
 	for (int i = 0; i < exponentSize; i++)
-		this->exponent[14-i] = (e >> i) & 1;
+		this->setExponent(14-i, (e >> i) & 1);
 }
 
 
 Qfloat::Qfloat(bool* bitSeq) : Qfloat()
 {
 	int counter = 0;
-	sign = bitSeq[counter++];
+	setSign(bitSeq[counter++]);
 	for (int i = 0; i < exponentSize; i++)
 	{
-		this->exponent[i] = bitSeq[counter++];
+		setExponent(i, bitSeq[counter++]);
 	}
 	for (int i = 0; i < significandSize; i++)
 	{
-		this->significand[i] = bitSeq[counter++];
+		this->setSignificand(i, bitSeq[counter++]);
 	}
 }
 
-bool* Qfloat::getBitSeq()
+string Qfloat::getBits()
 {
-	bool* bitSeq = new bool[128];
-	int counter = 0;
-	bitSeq[counter++] = this->sign;
+	string num;
+	num = num + char('0' + this->getSign());
 	for (int i = 0; i < exponentSize; i++)
-		bitSeq[counter++] = this->exponent[i];
+		num = num + char('0' + this->getExponent(i));
 	for (int i = 0; i < significandSize; i++)
-		bitSeq[counter++] = this->significand[i];
-	return bitSeq;
+		num = num + char('0' + this->getSignificand(i));
+	return num;
 }
 
 
 string Qfloat::getValue()
 {
-	//Kiểm tra số 0 
-	int check = sign;
-	for (int i = 0; i < exponentSize; i++)
-		check = check + exponent[i];
-	for (int i = 0; i < significandSize; i++)
-		check = check + significand[i];
-	if (check == 0)
+	//Kiểm tra số đặc biệt
+	if (this->isZero())
 		return string("0");
+	if (this->isDenormalized())
+		return string("Denormalized Number");
+	if (this->isInf())
+		return string("Inf");
+	if (this->isNaN())
+		return string("NaN");
+
 	//Xác định dấu của số
 	string ans;
-	if (sign == true)
+	if (getSign() == true)
 		ans = ans + '-';
 	
 	//Lấy giá trị ở hệ thập phân của exponent
 	int e = 0;
 	for (int i = 0; i < exponentSize; i++)
 	{
-		e = e | (this->exponent[i] << (14 - i));
+		e = e | (this->getExponent(i) << (14 - i));
 	}
 	e = e - biasingValue;
 	
 	//Xác định bit 1 phải nhất của significand
 	int lastOne = significandSize;
-	while (this->significand[lastOne - 1] == false)
+	while (this->getSignificand(lastOne - 1) == false)
 		lastOne--;
 
 	//Tính phần nguyên
@@ -123,7 +175,7 @@ string Qfloat::getValue()
 		string Pow = "1";
 		for (int i = pointPos-1; i >= 0; i--)
 		{
-			if (this->significand[i] == true)
+			if (this->getSignificand(i) == true)
 				intPart = addInt(intPart, Pow);
 			Pow = addInt(Pow,Pow);
 		}
@@ -139,7 +191,7 @@ string Qfloat::getValue()
 		//Trường hợp e âm sẽ có 1 số 1 của phần thập phân nằm bên trái dấu chấm.
 		if (i == -1)
 			decPart = addDec(decPart, Pow);
-		if (i >= 0 && this->significand[i] == true)
+		if (i >= 0 && this->getSignificand(i) == true)
 			decPart = addDec(decPart, Pow);
 	}
 
@@ -226,30 +278,6 @@ string Qfloat::mult2onDec(string num, int& rest)
 	return ans;
 }
 
-void Qfloat::printBit(bool* bitSeq)
-{
-	int counter = 0;
-	if (bitSeq[counter++] == false)
-		std::cout << 0;// << " ";
-	else
-		std::cout << 1;// << " ";
-	for (int i = 0; i < exponentSize; i++)
-	{
-		if (bitSeq[counter++] == false)
-			std::cout << 0;
-		else
-			std::cout << 1;
-	}
-	//std::cout << " ";
-	for (int i = 0; i < significandSize; i++)
-	{
-		if (bitSeq[counter++] == false)
-			std::cout << 0;
-		else
-			std::cout << 1;
-	}
-}
-
 //Hàm cộng phần nguyên của 2 số
 string Qfloat::addInt(string a, string b)
 {
@@ -334,15 +362,10 @@ string Qfloat::standardize(string num)
 	return num;
 }
 
-void decToBin(Qfloat* num)
+Qfloat* decToBin(string num)
 {
-	std::cout << "Nhap so: ";
-	string str;
-	std::cin >> str;
-	num = new Qfloat(str);
-	std::cout << "Chuoi bit la: ";
-	Qfloat::printBit(num->getBitSeq());
-	std::cout << std::endl;
+	Qfloat* newQfloat = new Qfloat(num);
+	return newQfloat;
 }
 
 
@@ -355,17 +378,123 @@ tôi có để cho bạn 1 vài gợi ý mà tôi nghĩ nó sẽ làm chương
 trình này chạy nhanh hơn (>.o)
 	Cố lên!!!
 */
-void binToDec(Qfloat* num)
+Qfloat* binToDec(string num)
 {
-	std::cout << "Nhap vao 1 chuoi bit: ";
-	string bitSeq;
-	std::cin >> bitSeq;
-	bool* bits = new bool[Qfloat::numSize];
-	for (int i = 0; i < Qfloat::numSize; i++)
-		bits[i] = false;
-	for (int i = 0; i < bitSeq.size(); i++)
-		bits[i] = (bitSeq[i] == '1');
-	num = new Qfloat(bits);
-	std::cout << "Gia tri cua so la: " << num->getValue() << std::endl;
+	bool* bits = new bool[128];
+	for (int i = 0; i < num.size(); i++)
+		bits[i] = (num[i] == '1');
+	Qfloat* newQfloat = new Qfloat(bits);
+	return newQfloat;
+}
+
+int ScanQfloat(Qfloat* &num, std::istream& inp, std::ostream& outp)
+{
+	//Nhập 2 chỉ thị p1, p2 và chuỗi số
+	int p1, p2;
+	string str;
+	inp >> p1 >> p2;
+	std::getline(inp,str);
+
+	//Kiểm tra chuỗi số vừa nhập có phải là con số hay không?
+	if (isNum(str) == false)
+	{
+		printInputError(NOT_A_NUMBER, outp);
+		return 0;
+	}
+
+	//Kiểm tra 2 chỉ thị có hợp lệ không
+	if (!((p1 == 10 && p2 == 2) || (p1 == 2 && p2 == 10)))
+	{
+		printInputError(WRONG_BASE, outp);
+	}
+	
+	//Chuyển chuỗi số vừa nhập được thành 1 đối tượng Qfloat
+	if (p1 == 2)
+		num = binToDec(str);
+	else
+		num = decToBin(str);
+	
+	//Trả về giá trị của p2
+	return p2;
+}
+
+void PrintQfloat(Qfloat* num, int base, std::ostream& outp)
+{
+	if (base == 0)
+		return;
+	else if (base == 2)
+		outp << num->getBits() << std::endl;
+	else
+		outp << num->getValue() << std::endl;
+}
+
+bool isNum(string& num)
+{
+	//Kiểm tra các kí tự có hợp lệ không:
+	for (int i = 0; i < num.size(); i++)
+		if (!(num[i] == ' ' ||
+			(num[i] >= '0' && num[i] <= '9') ||
+			num[i] == '.'))
+		{
+			return false;
+		}
+
+	//Xóa các khoảng trắng ở đầu và cuối chuỗi để tiện kiểm tra
+	std::reverse(num.begin(), num.end());
+	int size = num.size();
+	while (num.size() > 0 && num[size - 1] == ' ')
+		size--;
+	num.resize(size);
+	std::reverse(num.begin(), num.end());
+	size = num.size();
+	while (num.size() > 0 && num[size - 1] == ' ')
+		size--;
+	num.resize(size);
+
+	//Kiểm tra có kí tự ' ' nào ở giữa chuỗi không
+	for (int i = 0; i < num.size(); i++)
+	{
+		if (num[i] == ' ')
+			return false;
+	}
+	
+	//Kiểm tra số lượng kí tự '.' trong chuỗi
+	int numPoint = 0;
+	for (int i = 0; i < num.size(); i++)
+	{
+		if (num[i] == '.')
+			numPoint++;
+		if (numPoint > 1)
+			return false;
+	}
+	
+	//Kiểm tra chuỗi rỗng
+	if (num.size() == 0)
+		return false;
+	return true;
+}
+
+void printInputError(INPUT_ERROR e, std::ostream& outp)
+{
+	switch (e)
+	{
+	case NOT_A_NUMBER:
+		outp << "Sorry! The thing you'd just entered was not a number" << std::endl;
+		break;
+	case WRONG_BASE:
+		outp << "This program doesn't work on those base" << std::endl;
+		break;
+	}
+}
+
+void process(std::istream& inp, std::ostream& outp)
+{
+	while (!inp.eof())
+	{
+		Qfloat* num = NULL;
+		int base = ScanQfloat(num, inp, outp);
+		PrintQfloat(num, base, outp);
+		delete num;
+	}
 }
 
