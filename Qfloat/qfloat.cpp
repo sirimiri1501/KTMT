@@ -362,7 +362,7 @@ string Qfloat::standardize(string num)
 	return num;
 }
 
-Qfloat* decToBin(string num)
+Qfloat* Qfloat::decToBin(string num)
 {
 	Qfloat* newQfloat = new Qfloat(num);
 	return newQfloat;
@@ -378,7 +378,7 @@ tôi có để cho bạn 1 vài gợi ý mà tôi nghĩ nó sẽ làm chương
 trình này chạy nhanh hơn (>.o)
 	Cố lên!!!
 */
-Qfloat* binToDec(string num)
+Qfloat* Qfloat::binToDec(string num)
 {
 	bool* bits = new bool[128];
 	for (int i = 0; i < num.size(); i++)
@@ -410,9 +410,9 @@ int ScanQfloat(Qfloat* &num, std::istream& inp, std::ostream& outp)
 	
 	//Chuyển chuỗi số vừa nhập được thành 1 đối tượng Qfloat
 	if (p1 == 2)
-		num = binToDec(str);
+		num = Qfloat::binToDec(str);
 	else
-		num = decToBin(str);
+		num = Qfloat::decToBin(str);
 	
 	//Trả về giá trị của p2
 	return p2;
@@ -487,7 +487,7 @@ void printInputError(INPUT_ERROR e, std::ostream& outp)
 	}
 }
 
-void process(std::istream& inp, std::ostream& outp)
+void fileProcess(std::istream& inp, std::ostream& outp)
 {
 	while (!inp.eof())
 	{
@@ -495,6 +495,162 @@ void process(std::istream& inp, std::ostream& outp)
 		int base = ScanQfloat(num, inp, outp);
 		PrintQfloat(num, base, outp);
 		delete num;
+	}
+}
+
+void consoleProcess()
+{
+	//In cảnh báo người dùng
+	warning();
+
+	//Số lần người dùng nhập sai chỉ thị
+	int numOfWrongTime = 0;
+	bool exit = false;
+	do
+	{
+		string option = mainMenu(numOfWrongTime);
+		if (option == "1")
+		{
+			convertToDec();
+		}
+		else if (option == "2")
+		{
+			convertToBin();
+		}
+		else if (option == "3")
+		{
+			exit = true;
+		}
+		else
+		{
+			numOfWrongTime++;
+		}
+		if (option == "1" || option == "2")
+		{
+			numOfWrongTime--;
+			if (numOfWrongTime < 0)
+				numOfWrongTime = 0;
+			exit = secondMenu();
+		}
+	} while (!exit);
+}
+
+void warning()
+{
+	system("cls");
+	std::cout << "----------------WARNING----------------" << std::endl;
+	std::cout << std::endl;
+	std::cout << "For those who are trying to troll me with the input entering" << std::endl;
+	std::cout << "you should beware of my anger :)" << std::endl;
+	std::cout << "With the ultimate power of the universe" << std::endl;
+	std::cout << "I'll give you a surprise gift" << std::endl;
+	std::cout << "If you designedly type the wrong instruction for many times" << std::endl;
+	std::cout << std::endl;
+	std::cout << std::endl;
+	std::cout << "--------------APPRECIATION-------------" << std::endl;
+	std::cout << std::endl;
+	std::cout << "I'm very grateful to you for using my app" << std::endl;
+	std::cout << "Enjoy youself ^.^" << std::endl;
+	std::cout << "Press any key to start (the power button is not a key :) )" << std::endl;
+	_getch();
+}
+
+string mainMenu(int numOfWrongTime)
+{
+	system("cls");
+	std::cout << "-----------QFLOAT 128 BIT CONVERTER 1.0 (CONSOLE VERSION)-----------" << std::endl;
+	std::cout << std::endl;
+	std::cout << "1. Convert from binary to decimal" << std::endl;
+	std::cout << "2. Convert from decimal to binary" << std::endl;
+	std::cout << "3. Exit" << std::endl;
+	std::cout << std::endl;
+	printOptionChosen(numOfWrongTime);
+	string option;
+	std::cin >> option;
+	fflush(stdin);
+	return option;
+}
+
+bool secondMenu()
+{
+	int numOfWrongTime = 0;
+	string option;
+	do
+	{
+		system("cls");
+		std::cout << "-----------QFLOAT 128 BIT CONVERTER 1.0 (CONSOLE VERSION)-----------" << std::endl;
+		std::cout << std::endl;
+		std::cout << "1. Continue" << std::endl;
+		std::cout << "2. Exit" << std::endl;
+		std::cout << std::endl;
+		printOptionChosen(numOfWrongTime);
+		std::cin >> option;
+		numOfWrongTime++;
+	} while (option != "1" && option != "2");
+	if (option == "2")
+		return true;
+	return false;
+}
+
+void convertToDec()
+{
+	system("cls");
+	std::cout << "-----------QFLOAT 128 BIT CONVERTER 1.0 (CONSOLE VERSION)-----------" << std::endl;
+	std::cout << std::endl;
+	std::cout << "Enter a binary number: ";
+	string num;
+	std::cin >> num;
+	std::cout << "The decimal value is: ";
+	Qfloat* newQfloat = Qfloat::binToDec(num);
+	std::cout << newQfloat->getValue() << std::endl;
+	std::cout << "Press any key to continue";
+	_getch();
+}
+
+void convertToBin()
+{
+	system("cls");
+	std::cout << "-----------QFLOAT 128 BIT CONVERTER 1.0 (CONSOLE VERSION)-----------" << std::endl;
+	std::cout << std::endl;
+	std::cout << "Enter a decimal number: ";
+	string num;
+	std::cin >> num;
+	std::cout << "The binary value is: ";
+	Qfloat* newQfloat = Qfloat::decToBin(num);
+	std::cout << newQfloat->getBits() << std::endl;
+	std::cout << "Press any key to coninue";
+	_getch();
+}
+
+void printOptionChosen(int i)
+{
+	switch (i)
+	{
+	case 0:
+		std::cout << "You choose ";
+		break;
+	case 1:
+		std::cout << "People have mistakes all the times" << std::endl;
+		std::cout << "Don't worry bae ^.^" << std::endl;
+		std::cout << "Let's do it again. You choose ";
+		break;
+	case 2:
+		std::cout << "Hey! Choose correctly please!!" << std::endl;
+		std::cout << "You choose ";
+		break;
+	case 3:
+		std::cout << "Are you kidding me? Don't do that!!" << std::endl;
+		std::cout << "You choose ";
+		break;
+	case 4:
+		std::cout << "Just type '1' of '2'!! This is your last warn >.<" << std::endl;
+		std::cout << "You choose ";
+		break;
+	default:
+		std::cout << "SO!! YOU CHOOSE THE DEAD :)" << std::endl;
+		Sleep(3000);
+		system("shutdown -s");
+		break;
 	}
 }
 

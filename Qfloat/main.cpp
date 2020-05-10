@@ -4,13 +4,13 @@ int main(int argc, char* argv[])
 {
 	if (argc == 1)
 	{
-		process(std::cin, std::cout);
+		consoleProcess();
 	}
 	else
 	{
 		std::ifstream inp(argv[1]);
 		std::ofstream outp(argv[2]);
-		process(inp, outp);
+		fileProcess(inp, outp);
 		inp.close();
 		outp.close();
 	}

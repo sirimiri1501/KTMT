@@ -4,6 +4,9 @@
 #include <algorithm>
 #include <string>
 #include <fstream>
+#include <stdio.h>
+#include <conio.h>
+#include <Windows.h>
 using std::string;
 
 /*
@@ -105,6 +108,12 @@ public:
 		+Ghép phần nguyên và phần thập phân lại với nhau
 	*/
 	string getValue();
+
+	//Chuyển chuỗi num ở hệ thập phân thành 1 đối tượng Qfloat
+	static Qfloat* decToBin(string num);
+
+	//Chuyển chuỗi num ở hệ nhị phân thành 1 đối tượng Qfloat
+	static Qfloat* binToDec(string num);
 
 	//ADDITIONAL FUNCTION
 	//Chuyển phần nguyên của của số thực sang dãy nhị phân
@@ -225,12 +234,6 @@ public:
 
 //USER DISPLAY FUNCTION
 
-//Chuyển chuỗi num ở hệ thập phân thành 1 đối tượng Qfloat
-Qfloat* decToBin(string num);
-
-//Chuyển chuỗi num ở hệ nhị phân thành 1 đối tượng Qfloat
-Qfloat* binToDec(string num);
-
 /*
 Nhập dữ liệu
 TODO:
@@ -265,7 +268,43 @@ bool isNum(string& num);
 void printInputError(INPUT_ERROR,std::ostream &);
 
 //Flow chính của cả chương trình: Được mô tả theo đề bài yêu cầu
-void process(std::istream&, std::ostream&);
+void fileProcess(std::istream&, std::ostream&);
+
+/*
+Flow phụ nhập xuất trong console hỗ trợ cho việc testing
+TODO:
+	+Tạo bảng cảnh báo người dùng (Hù dạo) =)))
+	+Tạo biến lưu số lần người dùng nhập sai
+		+Người dùng nhập đúng -> giảm giá trị xuống 1 đơn vị. Tối thiểu là 0
+		+Người dùng nhập sai  -> tăng giá trị lên 1 đơn vị. 
+	+Menu chính gồm có 3 chức năng:
+		+1.Chuyển nhị phân thành thập phân
+		+2.Chuyển thập phân thành nhị phân
+		+3.Thoát chương trình
+	+Nếu người dùng chọn chức nặng 1 hoặc 2, sau khi thực hiện xong sẽ hiện menu phụ
+	-Menu phụ gồm 2 chức năng:
+		-1.Tiếp tục(Quay lại menu chính)
+		-2.Thoát chương trình
+*/
+void consoleProcess();
+
+//Cảnh báo người dùng: ĐỪNG CÓ TROLL DEV :)
+void warning();
+
+//Menu chính: Đưa vào số lần người dùng nhập sai (Nếu sai nhiều quá -> CHỬI CM người dùng)
+string mainMenu(int numOfWrongTime);
+
+//Menu phụ: Trả về true nếu người dùng muốn thoát chương trình và ngược lại
+bool secondMenu();
+
+//Giao diện chức năng chuyển nhị phân -> thập phân
+void convertToDec();
+
+//Giao diện chức năng chuyển thập phân -> nhị phân
+void convertToBin();
+
+//CHỬI NGƯỜI DÙNG
+void printOptionChosen(int i);
 #endif // !__QFLOAT__
 
 /*
@@ -275,6 +314,8 @@ CÁC HẠN CHẾ CHƯA GIẢI QUYẾT ĐƯỢC
 	-Chưa có các đối tượng đặc biệt như số vô cùng (Inf), số báo lỗi(NaN), Denomalize number
 	-Chưa có các hàm giao diện thân thiện với người dùng
 	-Chưa có các toán tử số học, gán, so sánh cho đối tượng
+	-Tính toán ở các bit thấp đôi khi không chính xác, nhưng không ảnh hưởng quá nhiều đến độ chính xác của 1 số
+	-Cần tách hàm kiểm tra isNum thành 2 hàm isBin và isDec
 */
 
 /*
