@@ -112,7 +112,12 @@ public:
 	//Chuyển chuỗi num ở hệ thập phân thành 1 đối tượng Qfloat
 	static Qfloat* decToBin(string num);
 
-	//Chuyển chuỗi num ở hệ nhị phân thành 1 đối tượng Qfloat
+	/*
+	Chuyển chuỗi num ở hệ nhị phân thành 1 đối tượng Qfloat
+	TODO:
+		+Thêm các bit 0 vào đầu chuỗi nếu chưa ddue 128 bit
+		+Tạo đối tượng Qfloat
+	*/
 	static Qfloat* binToDec(string num);
 
 	//ADDITIONAL FUNCTION
@@ -248,21 +253,24 @@ int ScanQfloat(Qfloat *&,std::istream&,std::ostream&);
 //Xuất num ra màn hình ở hệ base
 void PrintQfloat(Qfloat* num, int base, std::ostream&);
 
+//Hàm xóa khoảng trống ở 2 đầu của 1 chuỗi, trả về false nếu chuỗi rỗng
+bool deleteSpace(string& str);
+
 /*
 Kiểm tra chuỗi num có phải là 1 số hay không?
 TODO:
-	+Kiểm tra chuỗi có các kí tự nào khác ngoài:
-		*Kí tự ' '
-		*Các kí tự từ '0' đến 9'
-		*kí tự '.'
-	+Xóa các khoảng trắng ở đầu và cuối chuỗi để tiện kiểm tra
-		+Đảo ngược chuỗi và xóa các khoảng trống đầu chuỗi
-		+Đảo ngược chuỗi lần nữa và các các khoảng trống cuối chuỗi
-	+Kiểm tra có kí tự ' ' nào ở giữa chuỗi không
-	+Kiểm tra số lượng kí tự '.' trong chuỗi
-	+Kiểm tra chuỗi có phải là chuỗi rỗng không(Do người dùng nhập toàn khoảng trống)
+	+Xóa khoảng trống đầu và cuối chuỗi
+	+Kiểm tra các kí tự chỉ gồm:
+		+'0' -> '9'
+		+'.'
+	+Số lượng kí tự '.' < 2
 */
-bool isNum(string& num);
+bool isDec(string num);
+
+//Kiểm tra chuỗi num có phải là 1 dãy bit hay không
+bool isBin(string num);
+
+//Xóa các kí tự thừa còn trong bộ nhớ tạm
 
 //In ra lỗi nhập liệu
 void printInputError(INPUT_ERROR,std::ostream &);

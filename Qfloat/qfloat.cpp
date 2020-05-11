@@ -136,7 +136,15 @@ string Qfloat::getBits()
 	return num;
 }
 
-
+/*
+	Bạn bị đứng máy??!!
+	Rất tiếc vì hiện tại tôi chưa tối ưu hóa code của mình
+để tính toán các dãy bit có giá trị quá to hoặc quá nhỏ.
+	Bạn có thể tham khảo phần cuối của file qfloat.h ở đó
+tôi có để cho bạn 1 vài gợi ý mà tôi nghĩ nó sẽ làm chương
+trình này chạy nhanh hơn (>.o)
+	Cố lên!!!
+*/
 string Qfloat::getValue()
 {
 	//Kiểm tra số đặc biệt
@@ -369,18 +377,12 @@ Qfloat* Qfloat::decToBin(string num)
 }
 
 
-/*
-	Bạn bị đứng máy??!!
-	Rất tiếc vì hiện tại tôi chưa tối ưu hóa code của mình 
-để tính toán các dãy bit có giá trị quá to hoặc quá nhỏ.
-	Bạn có thể tham khảo phần cuối của file qfloat.h ở đó 
-tôi có để cho bạn 1 vài gợi ý mà tôi nghĩ nó sẽ làm chương 
-trình này chạy nhanh hơn (>.o)
-	Cố lên!!!
-*/
+
 Qfloat* Qfloat::binToDec(string num)
 {
 	bool* bits = new bool[128];
+	while (num.size() < 128)
+		num = '0' + num;
 	for (int i = 0; i < num.size(); i++)
 		bits[i] = (num[i] == '1');
 	Qfloat* newQfloat = new Qfloat(bits);
@@ -392,11 +394,11 @@ int ScanQfloat(Qfloat* &num, std::istream& inp, std::ostream& outp)
 	//Nhập 2 chỉ thị p1, p2 và chuỗi số
 	int p1, p2;
 	string str;
-	inp >> p1 >> p2;
-	std::getline(inp,str);
+	inp >> p1 >> p2 >> str;
 
 	//Kiểm tra chuỗi số vừa nhập có phải là con số hay không?
-	if (isNum(str) == false)
+	if ((p1 == 10 && isDec(str) == false) ||
+		(p1 ==  2 && isBin(str) == false))
 	{
 		printInputError(NOT_A_NUMBER, outp);
 		return 0;
@@ -428,49 +430,51 @@ void PrintQfloat(Qfloat* num, int base, std::ostream& outp)
 		outp << num->getValue() << std::endl;
 }
 
-bool isNum(string& num)
+bool deleteSpace(string& str)
 {
-	//Kiểm tra các kí tự có hợp lệ không:
-	for (int i = 0; i < num.size(); i++)
-		if (!(num[i] == ' ' ||
-			(num[i] >= '0' && num[i] <= '9') ||
-			num[i] == '.'))
-		{
-			return false;
-		}
-
-	//Xóa các khoảng trắng ở đầu và cuối chuỗi để tiện kiểm tra
-	std::reverse(num.begin(), num.end());
-	int size = num.size();
-	while (num.size() > 0 && num[size - 1] == ' ')
+	int size = str.size();
+	while (size > 0 && str[size - 1] == ' ')
 		size--;
-	num.resize(size);
-	std::reverse(num.begin(), num.end());
-	size = num.size();
-	while (num.size() > 0 && num[size - 1] == ' ')
+	if (size == 0)
+		return false;
+	str.resize(size);
+	std::reverse(str.begin(),str.end());
+	while (size > 0 && str[size - 1] == ' ')
 		size--;
-	num.resize(size);
+	str.resize(size);
+	std::reverse(str.begin(), str.end());
+	return true;
+}
 
-	//Kiểm tra có kí tự ' ' nào ở giữa chuỗi không
-	for (int i = 0; i < num.size(); i++)
-	{
-		if (num[i] == ' ')
-			return false;
-	}
-	
-	//Kiểm tra số lượng kí tự '.' trong chuỗi
+bool isDec(string num)
+{
+	if (deleteSpace(num) == false)
+		return false;
 	int numPoint = 0;
 	for (int i = 0; i < num.size(); i++)
 	{
 		if (num[i] == '.')
+		{
 			numPoint++;
-		if (numPoint > 1)
+			if (numPoint > 1)
+				return false;
+			continue;
+		}
+		if (num[i] > '9' || num[i] < '0')
 			return false;
 	}
-	
-	//Kiểm tra chuỗi rỗng
-	if (num.size() == 0)
+	return true;
+}
+
+bool isBin(string num)
+{
+	if (deleteSpace(num) == false)
 		return false;
+	for (int i = 0; i< num.size(); i++)
+	{
+		if (num[i] != '1' && num[i] != '0')
+			return false;
+	}
 	return true;
 }
 
@@ -541,7 +545,7 @@ void warning()
 	std::cout << "----------------WARNING----------------" << std::endl;
 	std::cout << std::endl;
 	std::cout << "For those who are trying to troll me with the input entering" << std::endl;
-	std::cout << "you should beware of my anger :)" << std::endl;
+	std::cout << "You should beware of my anger :)" << std::endl;
 	std::cout << "With the ultimate power of the universe" << std::endl;
 	std::cout << "I'll give you a surprise gift" << std::endl;
 	std::cout << "If you designedly type the wrong instruction for many times" << std::endl;
@@ -566,8 +570,9 @@ string mainMenu(int numOfWrongTime)
 	std::cout << std::endl;
 	printOptionChosen(numOfWrongTime);
 	string option;
-	std::cin >> option;
-	fflush(stdin);
+	rewind(stdin);
+	std::getline(std::cin, option);
+	deleteSpace(option);
 	return option;
 }
 
@@ -584,7 +589,9 @@ bool secondMenu()
 		std::cout << "2. Exit" << std::endl;
 		std::cout << std::endl;
 		printOptionChosen(numOfWrongTime);
-		std::cin >> option;
+		rewind(stdin);
+		std::getline(std::cin, option);
+		deleteSpace(option);
 		numOfWrongTime++;
 	} while (option != "1" && option != "2");
 	if (option == "2")
@@ -599,11 +606,19 @@ void convertToDec()
 	std::cout << std::endl;
 	std::cout << "Enter a binary number: ";
 	string num;
-	std::cin >> num;
-	std::cout << "The decimal value is: ";
-	Qfloat* newQfloat = Qfloat::binToDec(num);
-	std::cout << newQfloat->getValue() << std::endl;
-	std::cout << "Press any key to continue";
+	rewind(stdin);
+	getline(std::cin, num);
+	if (isBin(num))
+	{
+		Qfloat* newQfloat = Qfloat::binToDec(num);
+		std::cout << "The decimal value is: ";
+		std::cout << newQfloat->getValue() << std::endl;
+		std::cout << "Press any key to continue";
+	}
+	else
+	{
+		std::cout << "Sorry! That is not a binary number! :)" << std::endl;
+	}
 	_getch();
 }
 
@@ -614,11 +629,19 @@ void convertToBin()
 	std::cout << std::endl;
 	std::cout << "Enter a decimal number: ";
 	string num;
-	std::cin >> num;
-	std::cout << "The binary value is: ";
-	Qfloat* newQfloat = Qfloat::decToBin(num);
-	std::cout << newQfloat->getBits() << std::endl;
-	std::cout << "Press any key to coninue";
+	rewind(stdin);
+	getline(std::cin, num);
+	if (isDec(num))
+	{
+		Qfloat* newQfloat = Qfloat::decToBin(num);
+		std::cout << "The binary value is: ";
+		std::cout << newQfloat->getBits() << std::endl;
+		std::cout << "Press any key to coninue";
+	}
+	else
+	{
+		std::cout << "Sorry! That is not a deciaml number! :)" << std::endl;
+	}
 	_getch();
 }
 
