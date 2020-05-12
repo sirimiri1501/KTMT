@@ -451,7 +451,10 @@ bool isDec(string num)
 	if (deleteSpace(num) == false)
 		return false;
 	int numPoint = 0;
-	for (int i = 0; i < num.size(); i++)
+	int i = 0;
+	if (num[i] = '-')
+		i++;
+	for (; i < num.size(); i++)
 	{
 		if (num[i] == '.')
 		{
@@ -640,7 +643,7 @@ void convertToBin()
 	}
 	else
 	{
-		std::cout << "Sorry! That is not a deciaml number! :)" << std::endl;
+		std::cout << "Sorry! That is not a decimal number! :)" << std::endl;
 	}
 	_getch();
 }
