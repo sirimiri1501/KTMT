@@ -73,7 +73,7 @@ Qfloat::Qfloat(string num) : Qfloat()
 	if (num[num.size() - 1] == '-')
 	{
 		num.resize(num.size() - 1);
-		
+		setSign(true);
 	}
 	
 	//Tách phần nguyên và phần thập phân
