@@ -91,19 +91,15 @@ Qfloat::Qfloat(string num) : Qfloat()
 	int pointPosition = staticPoint.size();				
 	staticPoint = staticPoint + intPartToBin(intPart);	
 
-	//Nếu chuỗi bit dạng dấu chấm tĩnh dài hơn kích thước của significand thì xóa bớt
-	while (staticPoint.size() > significandSize + 1)
-	{
-		staticPoint.erase(staticPoint.begin());
-		pointPosition--;
-	}
 	//Tính significand
 	int e = staticPoint.size() - 1;
 	while (staticPoint[e] == '0')
 		e--;
-	for (int i = e - 1; i >= 0; i--)
-		this->setSignificand(e - i - 1, staticPoint[i] == '1');
-
+	for (int i = 0; i < significandSize; i++)
+	{
+		this->setSignificand(i, staticPoint[e] == '1');
+		e--;
+	}
 	//Tính exponent
 	e = biasingValue + (e - pointPosition);
 	for (int i = 0; i < exponentSize; i++)
@@ -176,114 +172,143 @@ string Qfloat::getValue()
 		lastOne--;
 
 	//Tính phần nguyên
-	string intPart = "0";
+	BigInt intPart;
 	int pointPos = e;
+	if (pointPos > significandSize)
+		pointPos = significandSize;
 	if (e >= 0)
 	{
-		string Pow = "1";
+		BigInt Pow(1);
 		for (int i = pointPos-1; i >= 0; i--)
 		{
 			if (this->getSignificand(i) == true)
-				intPart = addInt(intPart, Pow);
-			Pow = addInt(Pow,Pow);
+				intPart = intPart + Pow;
+			Pow = Pow * 2;
 		}
-		intPart = addInt(intPart, Pow);
+		intPart = intPart + Pow;
+	}
+	//x << i = x * 2^i
+	if (e > significandSize)
+	{
+		int time = e - significandSize;
+		while (time)
+		{
+			int temp = 1;
+			for (int i = 0; i < 28; i++)
+			{
+				if (time == 0)
+					break;
+				temp *= 2;
+				time--;
+			}
+			intPart = intPart * temp;
+		}
 	}
 
 	//Tính phần thập phân
-	string decPart = "0";
-	string Pow = "0";
-	for (int i = e; i < lastOne; i++)
+	BigInt decPart, Pow(1);
+	int realPowSize = 0;
+	int realDecSize = 0;
+	if (e < 0)
+		pointPos = 0;
+	else
+		pointPos = e;
+	for (int i = pointPos; i < lastOne; i++)
 	{
-		Pow = div2onDec(Pow);
-		//Trường hợp e âm sẽ có 1 số 1 của phần thập phân nằm bên trái dấu chấm.
-		if (i == -1)
-			decPart = addDec(decPart, Pow);
+		div2onDec(Pow, realPowSize);
 		if (i >= 0 && this->getSignificand(i) == true)
-			decPart = addDec(decPart, Pow);
+			addDec(decPart, realDecSize, Pow, realPowSize);
+	}
+	//x >> i = x*2^(-i)
+	if (e < 0)
+	{
+		//Giải quyết số 1 đầu tiên bên trái dấu phẩy
+		BigInt Pow(5); //2^(-1)
+		int realPowSize = 1;
+		div2onDec(decPart, realDecSize);
+		addDec(decPart, realDecSize, Pow, realPowSize);
+		
+		//Giải quyết cái số còn lại
+		int time = -e - 1;
+		for (int i = 0; i < time; i++)
+		{
+			div2onDec(decPart, realDecSize);
+		}
 	}
 
 	//Ghép phần nguyên và phần thập phân lại với nhau
-	std::reverse(intPart.begin(), intPart.end());
-	std::reverse(decPart.begin(), decPart.end());
-	ans = ans + intPart + '.' + decPart;
+	ans = ans + intPart.getNum() + '.';
+	for (int i = realDecSize; i > decPart.getSize(); i--)
+		ans = ans + '0';
+	ans = ans + decPart.getNum();
 	return ans;
 }
 
 
-string Qfloat::intPartToBin(string num)
+string Qfloat::intPartToBin(string str)
 {
+	BigInt num(str);
 	string ans;
-	if (num == "0")
+	if (num.isZero())
 		return string("0");
-	int rest = 0;
-	while (num != "0")
+	char rest;
+	while (num.isZero() == false)
 	{
-		num = div2onInt(num,rest);
-		ans = ans + char(rest + '0');
+		div2onInt(num,rest);
+		ans = ans + rest;
 	}
 	return ans;
 }
 
 
-string Qfloat::decPartToBin(string num)
+string Qfloat::decPartToBin(string str)
 {
-	if (num == "0")
+	BigInt num(str);
+	int fixedSize = str.size();
+	if (num.isZero())
 		return string("0");
 	string ans;
-	int rest = 0;
+	char rest;
 	//Bắt đầu đếm khi gặp bit 1 đầu tiên
 	bool isCounting = false;
 	//Biến đếm bit
 	int counter = 0;
-	while (num != "0")
+	while (num.isZero() == false)
 	{
-		num = mult2onDec(num, rest);
-		ans = char(rest + '0') + ans;
+		mult2onDec(num, fixedSize, rest);
+		//std::cout << num.getNum() << " " << num.getSize() << " " << rest << std::endl;
+		//_getch();
+		ans = ans + rest;
 		//Gặp bit 1 đầu tiên --> bật chế độ đếm bit
-		if (ans[0] == '1')
-			isCounting = true;
 		if (isCounting)
 			counter++;
+		if (rest == '1')
+			isCounting = true;
 		//Nếu kích thước phần cần lưu mà lớn hơn kích thước của significand thì dừng
 		if (counter == significandSize)
 			break;
 	}
+	std::reverse(ans.begin(), ans.end());
 	return ans;
 }
 
 
-string Qfloat::div2onInt(string num, int& rest)
+void Qfloat::div2onInt(BigInt& num, char& rest)
 {
-	string ans;
-	rest = 0;
-	for (int i = num.size() - 1; i >= 0; i--)
-	{
-		rest = rest * 10 + (num[i] - '0');
-		ans = char(rest / 2 + '0') + ans;
-		rest = rest % 2;
-	}
-	int ansSize = ans.size();
-	while (ansSize > 1 && ans[ansSize - 1] == '0')
-		ansSize--;
-	ans.resize(ansSize);
-	return ans;
+	rest = char('0' + (num % 2));
 }
 
 
-string Qfloat::mult2onDec(string num, int& rest)
+void Qfloat::mult2onDec(BigInt& num, int fixedSize, char& rest)
 {
-	string ans;
-	rest = 0;
-	for (int i = 0; i < num.size(); i++)
+	num = num * 2;
+	if (num.getSize() > fixedSize)
 	{
-		rest = rest + (num[i] - '0') * 2;
-		ans = ans + char(rest % 10 + '0');
-		rest = rest / 10;
+		rest = '1';
+		num.resize(fixedSize);
 	}
-	while (ans.size() > 1 && ans[0] == '0')
-		ans.erase(ans.begin());
-	return ans;
+	else
+		rest = '0';
 }
 
 //Hàm cộng phần nguyên của 2 số
@@ -308,37 +333,25 @@ string Qfloat::addInt(string a, string b)
 }
 
 
-string Qfloat::div2onDec(string num)
+void Qfloat::div2onDec(BigInt& num,int& realDecSize)
 {
-	if (num == "0")
-		return string("5");
-	string ans;
-	int mem = 0;
-	for (int i = 0; i < num.size(); i++)
-	{
-		mem = mem + (num[i] - '0') * 5;
-		ans = ans + char((mem % 10) + '0');
-		mem = mem / 10;
-	}
-	ans = ans + char(mem + '0');
-	return ans;
+	num = num * 5;
+	realDecSize++;
 }
 
-string Qfloat::addDec(string a, string b)
+void Qfloat::addDec(BigInt& a,int& realASize, BigInt& b, int& realBSize)
 {
-	string ans;
-	int mem = 0;
-	if (a.size() < b.size())
-		swap(a, b);
-	while (b.size() < a.size())
-		b = '0' + b;
-	for (int i = 0; i < a.size(); i++)
+	while (realASize < realBSize)
 	{
-		mem = mem + (a[i] - '0') + (b[i] - '0');
-		ans = ans + char((mem % 10) + '0');
-		mem = mem / 10;
+		a = a * 10;
+		realASize++;
 	}
-	return ans;
+	while (realBSize > realASize)
+	{
+		b = b * 10;
+		realBSize++;
+	}
+	a = a + b;
 }
 
 

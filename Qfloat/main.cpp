@@ -2,7 +2,7 @@
 
 int main(int argc, char* argv[])
 {
-	/*if (argc == 1)
+	if (argc == 1)
 	{
 		consoleProcess();
 	}
@@ -13,12 +13,9 @@ int main(int argc, char* argv[])
 		fileProcess(inp, outp);
 		inp.close();
 		outp.close();
-	}*/
-
-	std::ifstream inp("Qfloat_input.txt");
-	std::ofstream outp("output.txt");
-	fileProcess(inp, outp);
-	inp.close();
-	outp.close();
-	return 0;
+	}
+/*	string x;
+	std::cin >> x;
+	std::cout << Qfloat::intPartToBin(x) << std::endl;
+	*/return 0;
 }

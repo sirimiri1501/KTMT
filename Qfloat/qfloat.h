@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <conio.h>
 #include <Windows.h>
+#include "bigint.h"
 using std::string;
 
 /*
@@ -122,7 +123,7 @@ public:
 
 	//ADDITIONAL FUNCTION
 	//Chuyển phần nguyên của của số thực sang dãy nhị phân
-	static string intPartToBin(string);	//DONE
+	static string intPartToBin(string);	//DONE UPDATE BIGNUM
 
 	/*
 	Chuyển phần thực của số thực sang dãy nhị phân
@@ -130,20 +131,20 @@ public:
 		+Xử lý phần thực là số 0
 		+Xử lý các số vượt quá số bit để lưu
 	*/
-	static string decPartToBin(string); 
+	static string decPartToBin(string);  //DONE UPDATE BIGNUM
 	
 	/*
 	Nhận vào 1 số nguyên chuỗi(num) và 1 biến số nguyên(rest)
 	Trả về thương sau khi chia 2 và phần dư được lưu vào rest
 	*/
-	static string div2onInt(string, int&);	//DONE
+	static void div2onInt(BigInt&, char&);	//DONE
 	
 	/*
 	Nhận vào phần thực của 1 số(num) và biến số nguyên(rest)
 	Kết quả trả về phần thực của phép num*2
 	rest = 1 nếu num*2 > 1 và ngược lại
 	*/
-	static string mult2onDec(string, int&); //DONE
+	static void mult2onDec(BigInt&, int, char&); //DONE
 
 	//Hàm cộng phần nguyên của 2 số
 	static string addInt(string, string); //DONE
@@ -155,11 +156,11 @@ public:
 		+Nhân phần thập phân đó cho 5	
 		+nếu số lượng chữ số của kết quả = số chữ số của num thì thêm 1 chữ số 0 vào đầu
 	*/
-	static string div2onDec(string);	
+	static void div2onDec(BigInt&,int &);	
 
 
 	//Cộng phần thập phân của 2 số
-	static string addDec(string, string);	//DONE
+	static void addDec(BigInt&, int& , BigInt&, int&);	//DONE
 	
 	/*
 	Chuẩn hóa 1 chuỗi sô do người dùng nhập
