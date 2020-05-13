@@ -70,9 +70,9 @@ Qfloat::Qfloat(string num) : Qfloat()
 	if (num == "0.0")
 		return;
 	//Kiểm tra số âm
-	if (num[num.size() - 1] == '-')
+	if (num[0] == '-')
 	{
-		num.resize(num.size() - 1);
+		num.erase(num.begin());
 		setSign(true);
 	}
 	
@@ -81,10 +81,10 @@ Qfloat::Qfloat(string num) : Qfloat()
 	string intPart;
 	string decPart;
 	for (; num[i] != '.'; i++)
-		decPart = decPart + num[i];
+		intPart = intPart + num[i];
 	i++;
 	for (; i < num.size(); i++)
-		intPart = intPart + num[i];
+		decPart = decPart + num[i];
 	
 	//Chuyển phần nguyên và phần thập phân sang nhị phân số chấm tĩnh
 	string staticPoint = decPartToBin(decPart);			
@@ -97,10 +97,9 @@ Qfloat::Qfloat(string num) : Qfloat()
 		e--;
 	for (int i = 0; i < significandSize; i++)
 	{
-		this->setSignificand(i, staticPoint[e] == '1');
-		e--;
-		if(e < 0)
+		if (e - i - 1 < 0)
 			break;
+		this->setSignificand(i, staticPoint[e-i-1] == '1');
 	}
 	//Tính exponent
 	e = biasingValue + (e - pointPosition);
@@ -165,7 +164,7 @@ string Qfloat::getValue()
 	for (int i = 0; i < exponentSize; i++)
 	{
 		e = e | (this->getExponent(i) << (14 - i));
-	}
+	}	
 	e = e - biasingValue;
 	
 	//Xác định bit 1 phải nhất của significand
@@ -348,7 +347,7 @@ void Qfloat::addDec(BigInt& a,int& realASize, BigInt& b, int& realBSize)
 		a = a * 10;
 		realASize++;
 	}
-	while (realBSize > realASize)
+	while (realBSize < realASize)
 	{
 		b = b * 10;
 		realBSize++;
@@ -382,6 +381,9 @@ string Qfloat::standardize(string num)
 	//Nếu số được nhập là -0.0 thì đổi thành 0.0
 	if (num == "0.0-")
 		num = "0.0";
+
+	//Đảo chuỗi để tiện xử lý
+	std::reverse(num.begin(), num.end());
 	return num;
 }
 
