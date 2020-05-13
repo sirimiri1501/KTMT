@@ -80,7 +80,7 @@ public:
 	/*
 	Hàm khởi tạo đưa vào 1 số thập phân dạng chuỗi.
 	TODO:
-		+Chuẩn hóa 1 số để tránh người dùng nhập không chuẩn và đảo chuỗi để tiện xử lý
+		+Chuẩn hóa 1 số để tránh người dùng nhập không chuẩn
 		+Kiểm tra số vừa nhập bằng 0
 		+Kiểm tra số âm
 		+Tách phần nguyên(integer part) và phần thập phân(decimal part)
@@ -134,33 +134,32 @@ public:
 	static string decPartToBin(string);  //DONE UPDATE BIGNUM
 	
 	/*
-	Nhận vào 1 số nguyên chuỗi(num) và 1 biến số nguyên(rest)
+	Nhận vào 1 số nguyên lớn(num) và 1 biến char (rest)
 	Trả về thương sau khi chia 2 và phần dư được lưu vào rest
 	*/
-	static void div2onInt(BigInt&, char&);	//DONE
+	static void div2onInt(BigInt&, char&);	//DONE UPDATE BIGNUM
 	
 	/*
-	Nhận vào phần thực của 1 số(num) và biến số nguyên(rest)
+	Nhận vào phần thực của 1 số(num) và biến số nguyên(real size) là kích thước thực tế của phần thập phân (tính thêm những số 0 ở đầu)
 	Kết quả trả về phần thực của phép num*2
-	rest = 1 nếu num*2 > 1 và ngược lại
+	rest = '1' nếu num*2 > 1 và ngược lại
 	*/
 	static void mult2onDec(BigInt&, int, char&); //DONE
 
 	//Hàm cộng phần nguyên của 2 số
-	static string addInt(string, string); //DONE
+	static string addInt(string, string); //UNUSED FUNCTION
 	
 	/*
 	Hàm chia 2 ở phần thập phân của 1 số(num)
 	TODO:
-		+Trường hợp num = 0 thì kết quả trả về là 5
 		+Nhân phần thập phân đó cho 5	
-		+nếu số lượng chữ số của kết quả = số chữ số của num thì thêm 1 chữ số 0 vào đầu
+		+Tăng kích thước thực tế (Do x*0.5 sẽ thêm 1 chữ số sau dấu '.')
 	*/
 	static void div2onDec(BigInt&,int &);	
 
 
 	//Cộng phần thập phân của 2 số
-	static void addDec(BigInt&, int& , BigInt&, int&);	//DONE
+	static void addDec(BigInt&, int& , BigInt&, int&);	//DONE UPDATE BIGNUM
 	
 	/*
 	Chuẩn hóa 1 chuỗi sô do người dùng nhập
@@ -171,71 +170,22 @@ public:
 		+Đảo chuỗi để tiện xử lý
 		+Xóa đi những số 0 vô nghĩa của phần nguyên
 		+Nếu số được nhập là -0.0 thì chuyển thành 0.0
+		+Đảo chuỗi lại
 	*/
 	static string standardize(string);	
 
 	//Các hàm kiểm tra các số đặc biệt:
 	//Số 0: exponent == 0 && significand == 0
-	bool isZero()
-	{
-		for (int i = 1; i < 4; i++)
-			if (data[i] != 0)
-				return false;
-		//Vì bit dấu có thể là 1 nên cần kiểm tra data[0] riêng
-		if (data[0] > 1)
-			return false;
-		return true;
-	}
+	bool isZero();
 	
 	//Số không thể chuẩn hóa(Denormalized Number): exponent == 0 && significand != 0
-	bool isDenormalized()
-	{
-		//Kiểm tra phần exponent
-		for (int i = 0; i < exponentSize; i++)
-		{
-			if (getExponent(i))
-				return false;
-		}
-		//Nếu không phải số 0 => significand != 0 => Denormalized Number
-		if (!isZero())
-			return true;
-		return false;
-	}
+	bool isDenormalized();
 	
 	//Sô vô cùng(Inf): exponent == 111..1 && significand == 0
-	bool isInf()
-	{
-		//Kiểm tra phần exponent
-		for (int i = 0; i < exponentSize; i++)
-		{
-			if (getExponent(i) == false)
-				return false;
-		}
-
-		//Kiểm tra phần significand
-		for (int i = 0; i < significandSize; i++)
-		{
-			if (getSignificand(i))
-				return false;
-		}
-		return true;
-	}
+	bool isInf();
 	
 	//Số báo lỗi(NaN): exponent == 111..1 && significand != 0
-	bool isNaN()
-	{
-		//Kiểm tra phần exponent
-		for (int i = 0; i < exponentSize; i++)
-		{
-			if (getExponent(i) == false)
-				return false;
-		}
-
-		//Nếu số vừa nhập không phải Inf => significand != 0
-		if (!isInf())
-			return true;
-		return false;
-	}
+	bool isNaN();
 };
 
 //USER DISPLAY FUNCTION
@@ -318,17 +268,9 @@ void printOptionChosen(int i);
 
 /*
 CÁC HẠN CHẾ CHƯA GIẢI QUYẾT ĐƯỢC
-	-Thời gian tính toán quá lâu nếu nhập 1 dãy bit của số quá lớn hoặc quá nhỏ
 	-Chưa có hàm làm tròn và quy định về việc làm tròn mặc định bao nhiêu chữ số ở phần thập phân
-	-Chưa có các đối tượng đặc biệt như số vô cùng (Inf), số báo lỗi(NaN), Denomalize number
-	-Chưa có các hàm giao diện thân thiện với người dùng
-	-Chưa có các toán tử số học, gán, so sánh cho đối tượng
-	-Tính toán ở các bit thấp đôi khi không chính xác, nhưng không ảnh hưởng quá nhiều đến độ chính xác của 1 số
-	-Cần tách hàm kiểm tra isNum thành 2 hàm isBin và isDec
+	-Chưa tính được giá trị của denormalized number.
+	-Chưa hoàn thiện tất cả các hàm của BigInt.
+	-Nên định nghĩa lại BigFloat kế thừa từ BigInt để tính toán đỡ rối hơn.
 */
 
-/*
-CÁC GỢI Ý HƯỚNG GIẢI QUYẾT
-	-Dùng hàm nhân nhanh 2 số lớn (FFT, katastuba)
-	-Đặt số lượng chữ số tối đa của phần thập phân và phần nguyên <= 10000	
-*/

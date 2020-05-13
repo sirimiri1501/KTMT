@@ -14,8 +14,5 @@ int main(int argc, char* argv[])
 		inp.close();
 		outp.close();
 	}
-/*	string x;
-	std::cin >> x;
-	std::cout << Qfloat::intPartToBin(x) << std::endl;
-	*/return 0;
+	return 0;
 }

@@ -387,6 +387,76 @@ string Qfloat::standardize(string num)
 	return num;
 }
 
+//Số báo lỗi(NaN): exponent == 111..1 && significand != 0
+
+
+//Sô vô cùng(Inf): exponent == 111..1 && significand == 0
+
+
+//Số không thể chuẩn hóa(Denormalized Number): exponent == 0 && significand != 0
+
+
+//Các hàm kiểm tra các số đặc biệt:
+//Số 0: exponent == 0 && significand == 0
+
+bool Qfloat::isZero()
+{
+	for (int i = 1; i < 4; i++)
+		if (data[i] != 0)
+			return false;
+	//Vì bit dấu có thể là 1 nên cần kiểm tra data[0] riêng
+	if (data[0] > 1)
+		return false;
+	return true;
+}
+
+bool Qfloat::isDenormalized()
+{
+	//Kiểm tra phần exponent
+	for (int i = 0; i < exponentSize; i++)
+	{
+		if (getExponent(i))
+			return false;
+	}
+	//Nếu không phải số 0 => significand != 0 => Denormalized Number
+	if (!isZero())
+		return true;
+	return false;
+}
+
+bool Qfloat::isInf()
+{
+	//Kiểm tra phần exponent
+	for (int i = 0; i < exponentSize; i++)
+	{
+		if (getExponent(i) == false)
+			return false;
+	}
+
+	//Kiểm tra phần significand
+	for (int i = 0; i < significandSize; i++)
+	{
+		if (getSignificand(i))
+			return false;
+	}
+	return true;
+}
+
+bool Qfloat::isNaN()
+{
+	//Kiểm tra phần exponent
+	for (int i = 0; i < exponentSize; i++)
+	{
+		if (getExponent(i) == false)
+			return false;
+	}
+
+	//Nếu số vừa nhập không phải Inf => significand != 0
+	if (!isInf())
+		return true;
+	return false;
+}
+
 Qfloat* Qfloat::decToBin(string num)
 {
 	Qfloat* newQfloat = new Qfloat(num);
