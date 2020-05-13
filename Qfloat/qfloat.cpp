@@ -99,6 +99,8 @@ Qfloat::Qfloat(string num) : Qfloat()
 	{
 		this->setSignificand(i, staticPoint[e] == '1');
 		e--;
+		if(e < 0)
+			break;
 	}
 	//Tính exponent
 	e = biasingValue + (e - pointPosition);
